@@ -8,27 +8,30 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const selectedIds = ref([...props.modelValue || []])
 
-watch(selectedIds, (val) => {
-    emit('update:modelValue', val)
-})
+const selectedIds = ref([])
 
 watch(
     () => props.modelValue,
     (val) => {
-        selectedIds.value = [...val || []]
+        if (JSON.stringify(val) !== JSON.stringify(selectedIds.value)) {
+            selectedIds.value = [...(val || [])].map(id => Number(id))
+        }
     },
     { immediate: true }
 )
 
+watch(selectedIds, (val) => {
+    if (JSON.stringify(val) !== JSON.stringify(props.modelValue)) {
+        emit('update:modelValue', val)
+    }
+})
 
 const getTypeDescription = (id) => {
-    const type = props.equipmentTypes?.find(t => Number(t.id) === Number(id))
-    return type ? type.description : 'Unknown'
+    const match = props.equipmentTypes?.find(t => Number(t.id) === Number(id))
+    return match?.description || 'Unknown'
 }
 </script>
-
 
 <template>
     <div>
@@ -38,7 +41,6 @@ const getTypeDescription = (id) => {
                 <thead class="table-light text-center">
                     <tr>
                         <th>Select</th>
-
                         <th>Brand - Model</th>
                         <th>Type</th>
                     </tr>
@@ -46,7 +48,7 @@ const getTypeDescription = (id) => {
                 <tbody>
                     <tr v-for="item in equipmentList" :key="item.id">
                         <td class="text-center">
-                            <input type="checkbox" :value="item.id" v-model="selectedIds" />
+                            <input type="checkbox" :value="Number(item.id)" v-model="selectedIds" />
                         </td>
                         <td>{{ item.brand }} - {{ item.model }}</td>
                         <td>{{ getTypeDescription(item.equipmentTypeId) }}</td>
@@ -59,6 +61,7 @@ const getTypeDescription = (id) => {
         </div>
     </div>
 </template>
+
 
 
 
