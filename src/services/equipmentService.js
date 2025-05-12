@@ -1,7 +1,9 @@
 import axios from 'axios'
 
-const API_URL = 'https://localhost:44379/api/equipment'
-const TYPES_URL = 'https://localhost:44379/api/equipmenttypes'
+
+const BASE_URL = import.meta.env.VITE_API_URL
+const API_URL = `${BASE_URL}/equipment`
+const TYPES_URL = `${BASE_URL}/equipmenttypes`
 
 const getAll = async () => {
     const res = await axios.get(API_URL)

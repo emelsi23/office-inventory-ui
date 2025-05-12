@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const BASE_URL = 'https://localhost:44379/api'
+
+
+const BASE_URL = import.meta.env.VITE_API_URL
 const TASK_URL = `${BASE_URL}/maintenancetasks`
 const LINK_URL = `${BASE_URL}/equipmentmaintenances`
 
@@ -34,7 +36,7 @@ const assignEquipments = async (taskId, equipmentIds) => {
 }
 
 const getAssignedEquipments = async (taskId) => {
-    const res = await axios.get(`${LINK_URL}/task/${taskId}`)
+    const res = await axios.get(`${LINK_URL}/task/${taskId}/equipments`)
     return res.data
 }
 
