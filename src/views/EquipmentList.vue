@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Swal from 'sweetalert2'
 import EquipmentService from '@/services/equipmentService'
 import EquipmentForm from '@/components/EquipmentForm.vue'
@@ -9,10 +9,35 @@ const showModal = ref(false)
 const selectedEquipment = ref(null)
 const equipmentTypes = ref([])
 
+const currentPage = ref(1)
+const itemsPerPage = 10
 
+const paginatedEquipment = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage
+    const end = start + itemsPerPage
+    return equipment.value.slice(start, end)
+})
+
+const totalPages = computed(() => Math.ceil(equipment.value.length / itemsPerPage))
+
+const changePage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+    }
+}
 
 const loadData = async () => {
-    equipment.value = await EquipmentService.getAll()
+    try {
+        const [equipments, types] = await Promise.all([
+            EquipmentService.getAll(),
+            EquipmentService.getEquipmentTypes()
+        ])
+        equipment.value = equipments
+        equipmentTypes.value = types
+        currentPage.value = 1
+    } catch {
+        Swal.fire('Error', 'Failed to load data', 'error')
+    }
 }
 
 const formatDate = (dateStr) => {
@@ -47,17 +72,13 @@ const closeForm = async () => {
     await loadData()
 }
 
-
 const getTypeDescription = (id) => {
     const type = equipmentTypes.value.find(t => t.id === id)
     return type ? type.description : 'Unknown'
 }
 
-onMounted(async () => {
-
+onMounted(() => {
     loadData()
-    equipmentTypes.value = await EquipmentService.getEquipmentTypes()
-
 })
 </script>
 
@@ -86,7 +107,7 @@ onMounted(async () => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in equipment" :key="item.id">
+                    <tr v-for="item in paginatedEquipment" :key="item.id">
                         <td>{{ item.id }}</td>
                         <td>{{ item.brand }}</td>
                         <td>{{ item.model }}</td>
@@ -105,11 +126,36 @@ onMounted(async () => {
                             </button>
                         </td>
                     </tr>
-                    <tr v-if="equipment.length === 0">
+                    <tr v-if="paginatedEquipment.length === 0">
                         <td colspan="7" class="text-center text-muted">No equipment found.</td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div v-if="totalPages > 1" class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination pagination-sm">
+                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                        <button class="page-link" @click="changePage(currentPage - 1)">
+                            &laquo; Prev
+                        </button>
+                    </li>
+
+                    <li class="page-item" v-for="page in totalPages" :key="page"
+                        :class="{ active: page === currentPage }">
+                        <button class="page-link" @click="changePage(page)">
+                            {{ page }}
+                        </button>
+                    </li>
+
+                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                        <button class="page-link" @click="changePage(currentPage + 1)">
+                            Next &raquo;
+                        </button>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
         <div v-if="showModal" class="modal-mask">

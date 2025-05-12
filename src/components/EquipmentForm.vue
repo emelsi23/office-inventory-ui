@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import EquipmentService from '@/services/equipmentService'
-import Swal from '@/alerts/swal'
+import Swal from 'sweetalert2'
 import Swal2 from 'sweetalert2'
 
 const props = defineProps({
@@ -9,7 +9,7 @@ const props = defineProps({
     onSuccess: Function
 })
 
-const form = ref({
+const getEmptyForm = () => ({
     brand: '',
     model: '',
     equipmentTypeId: '',
@@ -17,6 +17,7 @@ const form = ref({
     serialNumber: ''
 })
 
+const form = ref(getEmptyForm())
 const isEdit = ref(false)
 const equipmentTypes = ref([])
 
@@ -28,13 +29,7 @@ watch(() => props.equipment, (value) => {
         }
         isEdit.value = true
     } else {
-        form.value = {
-            brand: '',
-            model: '',
-            equipmentTypeId: '',
-            purchaseDate: '',
-            serialNumber: ''
-        }
+        form.value = getEmptyForm()
         isEdit.value = false
     }
 }, { immediate: true })
@@ -61,24 +56,41 @@ const addNewType = async () => {
         }
     }
 }
-onMounted(async () => {
-    equipmentTypes.value = await EquipmentService.getEquipmentTypes()
-})
 
 const handleSubmit = async () => {
     try {
         if (isEdit.value) {
             await EquipmentService.update(form.value.id, form.value)
-            await Swal.showSuccess('Equipment updated')
+            await Swal.fire({
+                icon: 'success',
+                title: 'Equipment updated',
+                confirmButtonText: 'OK'
+            })
         } else {
             await EquipmentService.create(form.value)
-            await Swal.showSuccess('Equipment created')
+            await Swal.fire({
+                icon: 'success',
+                title: 'Equipment created',
+                confirmButtonText: 'OK'
+            })
         }
         props.onSuccess?.()
     } catch (err) {
-        Swal.showError('Failed to save equipment')
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to save equipment',
+            confirmButtonText: 'OK'
+        })
     }
 }
+
+onMounted(async () => {
+    try {
+        equipmentTypes.value = await EquipmentService.getEquipmentTypes()
+    } catch {
+        Swal.showError('Failed to load equipment types')
+    }
+})
 </script>
 
 <template>

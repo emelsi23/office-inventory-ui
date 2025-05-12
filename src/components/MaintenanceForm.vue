@@ -12,53 +12,57 @@ const props = defineProps({
 
 const isEdit = ref(false)
 const equipmentTypes = ref([])
-const form = ref({
+const equipmentList = ref([])
+const selectedEquipments = ref([])
+
+const getEmptyForm = () => ({
     id: null,
     description: ''
 })
 
-const equipmentList = ref([])
-const selectedEquipments = ref([])
+const form = ref(getEmptyForm())
 
 const loadEquipments = async () => {
     equipmentList.value = await EquipmentService.getAll()
     equipmentTypes.value = await EquipmentService.getEquipmentTypes()
 }
 
-const loadAssignedEquipments = async (taskId) => {
-    try {
-        const assigned = await MaintenanceService.getEquipmentsByTask(taskId)
-        selectedEquipments.value = assigned.map(e => e.id)
-    } catch {
-        selectedEquipments.value = []
-    }
-}
-
-const resetForm = () => {
-    form.value = { id: null, description: '' }
-    selectedEquipments.value = []
-    isEdit.value = false
-}
-const handleTaskChange = async (value) => {
-    if (value && value.id !== form.value.id) {
-        form.value = { ...value }
-        isEdit.value = true
-        await loadAssignedEquipments(value.id)
-    } else if (!value) {
-        resetForm()
-    }
-}
 watch(
     () => props.task,
-    (value) => {
-        handleTaskChange(value)
+    async (value) => {
+        if (value?.id) {
+            form.value = {
+                id: value.id,
+                description: value.description
+            }
+            isEdit.value = true
+
+            try {
+                const assigned = await MaintenanceService.getAssignedEquipments(value.id)
+                selectedEquipments.value = Array.isArray(assigned)
+                    ? assigned.map(id => Number(id))
+                    : []
+                console.log('Assigned Equipment IDs:', selectedEquipments.value)
+            } catch (err) {
+                console.error('Failed to load assigned equipments', err)
+                selectedEquipments.value = []
+            }
+        } else {
+            form.value = getEmptyForm()
+            selectedEquipments.value = []
+            isEdit.value = false
+        }
     },
     { immediate: true }
 )
 
 const handleSubmit = async () => {
     if (selectedEquipments.value.length === 0) {
-        Swal.fire('Error', 'Please assign at least one equipment.', 'error')
+        await Swal.fire({
+            icon: 'error',
+            title: 'Please assign at least one equipment.',
+            confirmButtonText: 'OK'
+        })
         return
     }
 
@@ -71,9 +75,7 @@ const handleSubmit = async () => {
             await Swal.fire({
                 icon: 'success',
                 title: 'Updated!',
-                timer: 2000,
-                showConfirmButton: false,
-                timerProgressBar: true
+                confirmButtonText: 'OK'
             })
         } else {
             const response = await MaintenanceService.create({
@@ -83,27 +85,32 @@ const handleSubmit = async () => {
             await Swal.fire({
                 icon: 'success',
                 title: 'Created!',
-                timer: 2000,
-                showConfirmButton: false,
-                timerProgressBar: true
+                confirmButtonText: 'OK'
             })
         }
 
         await MaintenanceService.assignEquipments(taskId, selectedEquipments.value)
         props.onSuccess?.()
     } catch (err) {
-        Swal.fire('Error', 'Failed to save task', 'error')
+        await Swal.fire({
+            icon: 'error',
+            title: 'Failed to save task',
+            text: err?.message || '',
+            confirmButtonText: 'OK'
+        })
     }
 }
 
-onMounted(loadEquipments)
+onMounted(() => {
+    loadEquipments()
+})
 </script>
 
 <template>
     <form @submit.prevent="handleSubmit">
         <div class="mb-3">
             <label class="form-label">Description *</label>
-            <input v-model="form.description" type="text" class="form-control" required />
+            <input v-model="form.description" type="text" class="form-control" required minlength="3" />
         </div>
 
         <AssignEquipmentToTask :equipmentList="equipmentList" :equipmentTypes="equipmentTypes"
