@@ -1,35 +1,68 @@
-# office-inventory-ui
+Office Inventory Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Frontend application for managing office equipment and maintenance tasks. Built with Vue 3, Bootstrap 5, and SweetAlert2.
 
-## Recommended IDE Setup
+---
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Tech Stack
 
-## Customize configuration
+Vue 3
+Bootstrap 5
+SweetAlert2
+Vite
+Axios
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+---
 
-## Project Setup
+Features
 
-```sh
+View and manage equipment list
+Assign equipment to maintenance tasks
+Add/edit equipment with type, serial number, and purchase date
+Paginated tables with responsive design
+User-friendly alerts and confirmations
+Modular components and clean architecture
+
+---
+
+Project Structure
+
+src/
+├── assets/               # Static files
+├── components/           # Vue components (EquipmentForm.vue, EquipmentTaskSelector.vue, etc.)
+├── views/                # Page-level components (Home.vue, EquipmentList.vue, etc.)
+├── services/             # API interaction services
+├── App.vue               # Main app shell
+└── main.js               # Entry point
+
+---
+
+Setup
+
+# Clone the repository
+git clone https://github.com/emelsi23/office-inventory-ui.git
+cd inventory-frontend
+
+# Install dependencies
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Run the dev server
 npm run dev
-```
 
-### Compile and Minify for Production
+---
 
-```sh
-npm run build
-```
+Environment
 
-### Lint with [ESLint](https://eslint.org/)
+Make sure to set the API URL in your environment if needed:
 
-```sh
-npm run lint
-```
+VITE_API_BASE_URL=http://localhost:5000/api
+
+---
+
+Scripts
+
+npm run dev         # Run development server
+npm run build       # Build for production
+npm run lint        # Lint code (if ESLint is configured)
+
+---
