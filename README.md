@@ -63,6 +63,5 @@ Scripts
 
 npm run dev         # Run development server
 npm run build       # Build for production
-npm run lint        # Lint code (if ESLint is configured)
 
 ---
